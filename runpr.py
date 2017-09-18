@@ -27,11 +27,10 @@ def exec(name):
             if selected_project:
                 if platform.startswith("win"):
                     click.echo(platform)
-                    activate_venv = "{}/Scripts/activate"
+                    activate_venv = "{}/Scripts/activate".format(selected_project["venv"])
                 else:
-                    activate_venv = "{}/bin/activate"
-                commande = "{} && cd {} && code .".format(activate_venv,
-                    selected_project["venv"], selected_project["path"])
+                    activate_venv = "{}/bin/activate".format(selected_project["venv"])
+                commande = "{} && cd {} && code .".format(activate_venv, selected_project["path"])
                 click.echo(commande)
                 os.system(commande)
             json_projects.close()
