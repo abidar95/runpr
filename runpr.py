@@ -26,8 +26,9 @@ def exec(name):
             selected_project = projects.get(name)
             if selected_project:
                 if platform.startswith("win"):
+                    click.echo(platform)
                     activate_venv = "{}/Scripts/activate"
-                 else:
+                else:
                     activate_venv = "{}/bin/activate"
                 commande = "{} && cd {} && code .".format(activate_venv,
                     selected_project["venv"], selected_project["path"])
