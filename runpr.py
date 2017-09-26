@@ -1,6 +1,7 @@
 import click
 import json
 import os
+from sys import platform
 
 PROJECTS_FILE = "projects.json"
 
@@ -24,8 +25,13 @@ def exec(name):
             projects = json.load(json_projects)
             selected_project = projects.get(name)
             if selected_project:
-                commande = "source {}/bin/activate && cd {} && code .".format(
-                    selected_project["venv"], selected_project["path"])
+                if platform.startswith("win"):
+                    selected_project["venv"].replace("/", "\\")
+                    selected_project["path"].replace("/", "\\")
+                    activate_venv = "{}\\Scripts\\activate".format(selected_project["venv"])
+                else:
+                    activate_venv = '"{}/bin/activate"'.format(selected_project["venv"])
+                commande = '"{}" && cd "{}" && code .'.format(activate_venv, selected_project["path"])
                 click.echo(commande)
                 os.system(commande)
             json_projects.close()
