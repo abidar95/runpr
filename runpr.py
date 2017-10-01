@@ -119,7 +119,7 @@ def list():
             click.echo("name: {}".format(project.get("name")))
             click.echo("path: {}".format(project.get("path")))
             click.echo("venv: {}".format(project.get("venv")))
-            click.echo("--------------------------------------------------")))
+            click.echo("--------------------------------------------------")
     else:
         click.echo("No project added yet.")
 
