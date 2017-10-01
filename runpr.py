@@ -104,26 +104,22 @@ def add(name, path, venv):
         "venv": venv
     })
 
-
-@run.command()
-@click.argument("name", type=click.STRING)
-def delete(name):
-    """
-    Add a project from list of saved projects
-    """
-    projects = load_projects()
-    for project in projects:
-        if project.get(name) == name:
-            del projects[project]
-            return click.echo("Project deleted successfully")
-    return click.echo("No project with this name")
+# TODO
+# @run.command()
+# @click.argument("name", type=click.STRING)
+# def delete(name):
+#     pass
 
 
 @run.command()
 def list():
     projects = load_projects()
     if projects:
-        click.echo(projects)
+        for project in projects:
+            click.echo("name: {}".format(project.get("name")))
+            click.echo("path: {}".format(project.get("path")))
+            click.echo("venv: {}".format(project.get("venv")))
+            click.echo("--------------------------------------------------")))
     else:
         click.echo("No project added yet.")
 
