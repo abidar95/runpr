@@ -44,7 +44,7 @@ def dump_project(project):
 
 def load_projects():
     """return list of saved projects"""
-    with open(PROJECTS_FILE, mode="r+", encoding="utf-8") as json_projects:
+    with open(PROJECTS_FILE, mode="w+", encoding="utf-8") as json_projects:
         if os.stat(PROJECTS_FILE).st_size > 0:
             return json.load(json_projects)
         return None
