@@ -42,7 +42,7 @@ def dump_project(project):
         click.echo(str(ex))
 
 
-def load_projects(name):
+def load_projects():
     """return list of saved projects"""
     with open(PROJECTS_FILE, mode="r", encoding="utf-8") as json_projects:
         if os.stat(PROJECTS_FILE).st_size > 0:
