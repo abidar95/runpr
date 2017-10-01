@@ -5,43 +5,19 @@ from sys import platform
 
 PROJECTS_FILE = "projects.json"
 
-# name = "vias_intranet"
-# try:
-#     mode = "r" if os.path.exists(PROJECTS_FILE) else "w"
-#     with open("projects.json", mode=mode, encoding="utf-8") as json_projects:
-#         if os.stat(PROJECTS_FILE).st_size > 0:
-#             projects = json.load(json_projects)
-#             selected_project = projects.get(name)
-#             if selected_project:
-#                 activate_venv = os.path.join(
-#                     selected_project["venv"],
-#                     "bin" if not platform.startswith("win") else "Scripts",
-#                     "activate")
-#                 commande = '{} "{}" && cd "{}" && code .'.format(
-#                     "source" if not platform.startswith("win") else "",
-#                     activate_venv, selected_project["path"])
-#                 os.system(commande)
-#             else:
-#                 click.echo("No project with this name.")
-#         else:
-#             click.echo("No project added yet.")
-# except FileNotFoundError:
-#     click.echo("No project added yet.")
-# except Exception as ex:
-#     click.echo(str(ex))
 
-
-def load_projects():
-    """return Json contains all projects"""
-    with open(PROJECTS_FILE, mode="a+", encoding="utf-8") as json_projects:
-        if mode == "r+" and os.stat(PROJECTS_FILE).st_size > 0:
-            projects = json.load(json_projects)
-        if not projects.get(project["name"]):
-            projects[name] = {"path": path, "venv": venv}
-            json.dump(projects, json_projects)
-
-        else:
-            click.echo("Project already exists")
+def venv_commande(venv):
+    if venv:
+        activate_venv = os.path.join(
+            venv,
+            "bin" if not platform.startswith("win") else "Scripts",
+            "activate")
+        return '{} "{}"'.format(
+            "source" if not platform.startswith("win") else "",
+            activate_venv
+        )
+    else:
+        return None
 
 
 def dump_project(project):
@@ -66,8 +42,76 @@ def dump_project(project):
         click.echo(str(ex))
 
 
-dump_project({
-    "name": "vias_int{}".format(122),
-    "path": "/home/rey/Desktop/Projects/vias_intranet/vias_app",
-    "venv": "/home/rey/Desktop/Projects/vias_intranet/venv"
-})
+def load_projects():
+    """return list of saved projects"""
+    mode = 'r' if os.path.exists(PROJECTS_FILE) else 'w'
+    with open(PROJECTS_FILE, mode=mode, encoding="utf-8") as json_projects:
+        if os.stat(PROJECTS_FILE).st_size > 0:
+            return json.load(json_projects)
+        return None
+
+
+def load_project(name):
+    """return Project from saved project list"""
+    for project in load_projects():
+        if project.get("name") == name:
+            return project
+    return None
+
+
+def exec(name):
+    """Execute a project via VSCODE"""
+    try:
+        project = load_project(name)
+        if project:
+            commande = '{} && cd "{}" && code .'.format(
+                venv_commande(project.get("venv")),
+                project.get("path"))
+            os.system(commande)
+        else:
+            click.echo("No project with this name.")
+    except Exception as ex:
+        click.echo(str(ex))
+
+
+def add(name, path, venv):
+    """
+    Add a project to Run-Project
+    Parameters:
+        name: the name of project
+        path: the path of project
+        venv: the path of project
+    """
+    dump_project({
+        "name": name,
+        "path": path,
+        "venv": venv
+    })
+
+
+def delete(name):
+    """
+    Add a project from list of saved projects
+    """
+    projects = load_projects()
+    for project in projects:
+        if project.get(name) == name:
+            del projects[project]
+            return click.echo("Project deleted successfully")
+    return click.echo("No project with this name")
+
+
+def list():
+    projects = load_projects()
+    if projects:
+        click.echo(projects)
+    else:
+        click.echo("No project added yet.")
+
+
+def file_path():
+    click.echo(os.path.abspath(PROJECTS_FILE))
+
+
+add("vias_intranet2", "/Desktop/Developments/runpr_pojects/runpr/",
+    "/Desktop/Developments/runpr_pojects/venv/")

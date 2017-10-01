@@ -44,7 +44,8 @@ def dump_project(project):
 
 def load_projects():
     """return list of saved projects"""
-    with open(PROJECTS_FILE, mode="w+", encoding="utf-8") as json_projects:
+    mode = 'r' if os.path.exists(PROJECTS_FILE) else 'w'
+    with open(PROJECTS_FILE, mode=mode, encoding="utf-8") as json_projects:
         if os.stat(PROJECTS_FILE).st_size > 0:
             return json.load(json_projects)
         return None
@@ -88,7 +89,7 @@ def exec(name):
 @run.command()
 @click.argument("name", type=click.STRING)
 @click.argument("path", type=click.Path(exists=True))
-@click.argument("venv", type=click.Path(exists=True))
+@click.argument("venv", type=click.Path(exists=True), required=False)
 def add(name, path, venv):
     """
     Add a project to Run-Project
@@ -108,17 +109,14 @@ def add(name, path, venv):
 @click.argument("name", type=click.STRING)
 def delete(name):
     """
-    Add a project to Run-Project
-    Parameters:
-        name: the name of project
-        path: the path of project
-        venv: the path of project
+    Add a project from list of saved projects
     """
-    dump_project({
-        "name": name,
-        "path": path,
-        "venv": venv
-    })
+    projects = load_projects()
+    for project in projects:
+        if project.get(name) == name:
+            del projects[project]
+            return click.echo("Project deleted successfully")
+    return click.echo("No project with this name")
 
 
 @run.command()
