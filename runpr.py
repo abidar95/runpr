@@ -6,6 +6,61 @@ from sys import platform
 PROJECTS_FILE = "projects.json"
 
 
+def venv_commande(venv):
+    if venv:
+        activate_venv = os.path.join(
+            venv,
+            "bin" if not platform.startswith("win") else "Scripts",
+            "activate")
+        return '{} "{}"'.format(
+            "source" if not platform.startswith("win") else "",
+            activate_venv
+        )
+    else:
+        return None
+
+
+def dump_project(project):
+    """
+    Add a Project to the projects list
+    project's format: {"name": name, "path": path, "venv": venv}
+    """
+    try:
+        with open(PROJECTS_FILE, mode="r+", encoding="utf-8") as json_projects:
+            projects = []
+            if os.stat(PROJECTS_FILE).st_size > 0:
+                projects = json.load(json_projects)
+            if any(pr["name"] == project["name"] for pr in projects):
+                click.echo("Project already exists")
+            else:
+                projects.append(project)
+                json_projects.seek(0)
+                json.dump(projects, json_projects)
+    except ValueError as ex:
+        click.echo("Invalid JSON File.!")
+    except Exception as ex:
+        click.echo(str(ex))
+
+
+def load_projects(name):
+    """return list of saved projects"""
+    with open(PROJECTS_FILE, mode="r", encoding="utf-8") as json_projects:
+        if os.stat(PROJECTS_FILE).st_size > 0:
+            return json.load(json_projects)
+        return None
+
+
+def load_project(name):
+    """return Project from saved project list"""
+    with open(PROJECTS_FILE, mode="r", encoding="utf-8") as json_projects:
+        if os.stat(PROJECTS_FILE).st_size > 0:
+            projects = json.load(json_projects)
+            for project in projects:
+                if project.get("name") == name:
+                    return project
+        return None
+
+
 @click.group()
 def run():
     """Script for running Python projects with Virtualenv
@@ -17,28 +72,15 @@ def run():
 @click.argument("name", type=click.STRING, default="-", required=False)
 def exec(name):
     """Execute a project via VSCODE"""
-
     try:
-        mode = "r" if os.path.exists(PROJECTS_FILE) else "w"
-        with open("projects.json", mode=mode, encoding="utf-8") as json_projects:
-            if os.stat(PROJECTS_FILE).st_size > 0:
-                projects = json.load(json_projects)
-                selected_project = projects.get(name)
-                if selected_project:
-                    activate_venv = os.path.join(
-                        selected_project["venv"],
-                        "bin" if not platform.startswith("win") else "Scripts",
-                        "activate")
-                    commande = '{} "{}" && cd "{}" && code .'.format(
-                        "source" if not platform.startswith("win") else "",
-                        activate_venv, selected_project["path"])
-                    os.system(commande)
-                else:
-                    click.echo("No project with this name.")
-            else:
-                click.echo("No project added yet.")
-    except FileNotFoundError:
-        click.echo("No project added yet.")
+        project = load_project(name)
+        if project:
+            commande = '{} && cd "{}" && code .'.format(
+                venv_commande(project.get("venv")),
+                project.get("path"))
+            os.system(commande)
+        else:
+            click.echo("No project with this name.")
     except Exception as ex:
         click.echo(str(ex))
 
@@ -55,14 +97,39 @@ def add(name, path, venv):
         path: the path of project
         venv: the path of project
     """
-    projects = {}
-    mode = "r+" if os.path.exists(PROJECTS_FILE) else "w"
-    with open("projects.json", mode=mode, encoding="utf-8") as json_projects:
-        if mode == "r+" and os.stat(PROJECTS_FILE).st_size > 0:
-            projects = json.load(json_projects)
-        if not projects.get(name):
-            projects[name] = {"path": path, "venv": venv}
-            json.dump(projects, json_projects)
+    dump_project({
+        "name": name,
+        "path": path,
+        "venv": venv
+    })
 
-        else:
-            click.echo("Project already exists")
+
+@run.command()
+@click.argument("name", type=click.STRING)
+def delete(name):
+    """
+    Add a project to Run-Project
+    Parameters:
+        name: the name of project
+        path: the path of project
+        venv: the path of project
+    """
+    dump_project({
+        "name": name,
+        "path": path,
+        "venv": venv
+    })
+
+
+@run.command()
+def list():
+    projects = load_projects()
+    if projects:
+        click.echo(projects)
+    else:
+        click.echo("No project added yet.")
+
+
+@run.command()
+def file_path():
+    click.echo(os.path.abspath(PROJECTS_FILE))
